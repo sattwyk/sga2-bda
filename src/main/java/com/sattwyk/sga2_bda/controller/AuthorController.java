@@ -2,9 +2,11 @@ package com.sattwyk.sga2_bda.controller;
 
 import com.sattwyk.sga2_bda.entity.Author;
 import com.sattwyk.sga2_bda.service.AuthorService;
+import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,8 +28,15 @@ public class AuthorController {
     }
 
     @PostMapping
-    public String createAuthor(@ModelAttribute("authorForm") Author author,
-                               RedirectAttributes redirectAttributes) {
+    public String createAuthor(@Valid @ModelAttribute("authorForm") Author author,
+                               BindingResult bindingResult,
+                               RedirectAttributes redirectAttributes,
+                               Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("authors", authorService.findAll());
+            model.addAttribute("validationErrors", bindingResult.getAllErrors());
+            return "authors";
+        }
         try {
             authorService.save(author);
             redirectAttributes.addFlashAttribute("successMessage", "Author saved successfully.");
@@ -45,8 +54,13 @@ public class AuthorController {
     }
 
     @PostMapping("/update")
-    public String updateAuthor(@ModelAttribute("authorForm") Author author,
+    public String updateAuthor(@Valid @ModelAttribute("authorForm") Author author,
+                               BindingResult bindingResult,
                                RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please correct the fields.");
+            return "redirect:/authors/edit/" + author.getId();
+        }
         try {
             authorService.save(author);
             redirectAttributes.addFlashAttribute("successMessage", "Author updated successfully.");

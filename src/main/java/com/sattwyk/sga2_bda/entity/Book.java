@@ -1,6 +1,8 @@
 package com.sattwyk.sga2_bda.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 public class Book {
@@ -9,11 +11,15 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Title is required")
     @Column(nullable = false)
     private String title;
 
+    @NotBlank(message = "ISBN is required")
+    @Column(nullable = false, unique = true)
     private String isbn;
 
+    @PositiveOrZero(message = "Price must be zero or positive")
     private Double price;
 
     @ManyToOne

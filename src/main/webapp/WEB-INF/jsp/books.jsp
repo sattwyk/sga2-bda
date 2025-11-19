@@ -1,144 +1,229 @@
 <%@ page contentType="text/html;charset=UTF-8" %> <%@ taglib
 uri="jakarta.tags.core" prefix="c" %>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>Books</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 20px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      .success {
-        color: green;
-      }
-      .error {
-        color: red;
-      }
-      #searchBox {
-        margin-top: 10px;
-        padding: 5px;
-        width: 250px;
-      }
-      input[type='text'],
-      input[type='number'],
-      select {
-        padding: 5px;
-        margin-right: 10px;
-        margin-top: 5px;
-      }
-      button {
-        padding: 6px 12px;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+    <title>Books — Library Management</title>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <script>
-      $(document).ready(function () {
-        // Hide messages after 3 seconds
-        setTimeout(function () {
-          $('.success, .error').fadeOut('slow');
-        }, 3000);
-
-        // Filter books by table text (title / author / isbn)
-        $('#searchBox').on('keyup', function () {
-          const value = $(this).val().toLowerCase();
-          $('#booksTable tbody tr').filter(function () {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-          });
-        });
-
-        // Simple validation for book form
-        $("form[action$='/books']").on('submit', function (e) {
-          const title = $("input[name='title']").val().trim();
-          const authorId = $("select[name='authorId']").val();
-
-          if (title === '' || !authorId) {
-            alert('Title and Author are required.');
-            e.preventDefault();
-          }
-        });
-      });
-    </script>
+    <!-- Modular Styles -->
+    <link
+      rel="stylesheet"
+      href="${pageContext.request.contextPath}/styles/app.css"
+    />
   </head>
   <body>
-    <h2>Books</h2>
+    <div class="container">
+      <div class="header">
+        <h1>Books</h1>
+        <div class="nav-links">
+          <a
+            href="${pageContext.request.contextPath}/books/with-authors"
+            class="btn btn-secondary"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 8h10M8 3v10" />
+            </svg>
+            View with Authors
+          </a>
+          <a
+            href="${pageContext.request.contextPath}/authors"
+            class="btn btn-secondary"
+            >Authors</a
+          >
+        </div>
+      </div>
 
-    <c:if test="${not empty successMessage}">
-      <p class="success">${successMessage}</p>
-    </c:if>
-    <c:if test="${not empty errorMessage}">
-      <p class="error">${errorMessage}</p>
-    </c:if>
+      <c:if test="${not empty validationErrors}">
+        <div class="alert error">
+          <ul style="margin: 0; padding-left: 18px;">
+            <c:forEach items="${validationErrors}" var="ve">
+              <li>${ve.defaultMessage}</li>
+            </c:forEach>
+          </ul>
+        </div>
+      </c:if>
+      <c:if test="${not empty successMessage}">
+        <div class="alert success">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            />
+          </svg>
+          ${successMessage}
+        </div>
+      </c:if>
+      <c:if test="${not empty errorMessage}">
+        <div class="alert error">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            />
+          </svg>
+          ${errorMessage}
+        </div>
+      </c:if>
 
-    <h3>Add Book</h3>
-    <form action="${pageContext.request.contextPath}/books" method="post">
-      Title: <input type="text" name="title" required /> ISBN:
-      <input type="text" name="isbn" /> Price:
-      <input type="number" step="0.01" name="price" />
-      Author:
-      <select name="authorId" required>
-        <option value="">Select</option>
-        <c:forEach items="${authors}" var="a">
-          <option value="${a.id}">${a.name}</option>
-        </c:forEach>
-      </select>
-      <button type="submit">Save</button>
-    </form>
-
-    <h3>Book List</h3>
-
-    Search:
-    <input type="text" id="searchBox" placeholder="Search by any field..." />
-
-    <table id="booksTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Title</th>
-          <th>ISBN</th>
-          <th>Price</th>
-          <th>Author</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <c:forEach items="${books}" var="b">
-          <tr>
-            <td>${b.id}</td>
-            <td>${b.title}</td>
-            <td>${b.isbn}</td>
-            <td>${b.price}</td>
-            <td>${b.author.name}</td>
-            <td>
-              <a href="${pageContext.request.contextPath}/books/edit/${b.id}"
-                >Edit</a
+      <div class="card">
+        <h2 class="card-title">Add New Book</h2>
+        <form action="${pageContext.request.contextPath}/books" method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="title">Title *</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-input"
+                placeholder="Enter book title"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="isbn">ISBN *</label>
+              <input
+                type="text"
+                id="isbn"
+                name="isbn"
+                class="form-input"
+                placeholder="978-0-123456-78-9"
+                required
+                pattern="^[A-Za-z0-9\\-]+$"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="price">Price</label>
+              <input
+                type="number"
+                id="price"
+                step="0.01"
+                name="price"
+                class="form-input"
+                placeholder="0.00"
+                min="0"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="authorId">Author *</label>
+              <select
+                id="authorId"
+                name="authorId"
+                class="form-select"
+                required
               >
-            </td>
-          </tr>
-        </c:forEach>
-      </tbody>
-    </table>
+                <option value="">Select an author</option>
+                <c:forEach items="${authors}" var="a">
+                  <option value="${a.id}">${a.name}</option>
+                </c:forEach>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Book</button>
+        </form>
+      </div>
 
-    <p>
-      <a href="${pageContext.request.contextPath}/books/with-authors"
-        >View Books with Authors (JOIN)</a
-      ><br />
-      <a href="${pageContext.request.contextPath}/authors">Back to Authors</a>
-    </p>
+      <div class="card">
+        <h2 class="card-title">All Books</h2>
+
+        <div class="search-wrapper">
+          <svg
+            class="search-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M12.5 12.5l4 4" />
+          </svg>
+          <input
+            type="text"
+            id="searchBox"
+            class="search-input"
+            placeholder="Search books by title, author, ISBN..."
+          />
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table" id="booksTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>ISBN</th>
+                <th>Price</th>
+                <th>Author</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <c:forEach items="${books}" var="b">
+                <tr>
+                  <td>${b.id}</td>
+                  <td><strong>${b.title}</strong></td>
+                  <td>${b.isbn}</td>
+                  <td>
+                    <c:if test="${not empty b.price}">$${b.price}</c:if>
+                  </td>
+                  <td>${b.author.name}</td>
+                  <td>
+                    <a
+                      href="${pageContext.request.contextPath}/books/edit/${b.id}"
+                      class="table-link"
+                      >Edit</a
+                    >
+                  </td>
+                </tr>
+              </c:forEach>
+            </tbody>
+          </table>
+          <c:if test="${empty books}">
+            <div class="empty-state">
+              <div class="empty-state-icon">📚</div>
+              <p>No books found. Add your first book above.</p>
+            </div>
+          </c:if>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modular Scripts -->
+    <script src="${pageContext.request.contextPath}/scripts/transitions.js"></script>
+    <script src="${pageContext.request.contextPath}/scripts/app.js"></script>
+
+    <!-- Page-specific script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Form validation for books
+        const bookForm = document.querySelector("form[action*='/books']");
+        if (bookForm) {
+          bookForm.setAttribute('data-validate', 'true');
+        }
+
+        // Client-side filter for books table
+        const searchBox = document.getElementById('searchBox');
+        const tbodyRows = document.querySelectorAll('#booksTable tbody tr');
+        if (searchBox) {
+          searchBox.addEventListener('input', function (e) {
+            const value = e.target.value.trim().toLowerCase();
+            tbodyRows.forEach((row) => {
+              const text = row.innerText.toLowerCase();
+              row.style.display = text.includes(value) ? '' : 'none';
+            });
+          });
+        }
+      });
+    </script>
   </body>
 </html>

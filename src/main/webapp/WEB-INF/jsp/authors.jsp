@@ -1,109 +1,201 @@
 <%@ page contentType="text/html;charset=UTF-8" %> <%@ taglib
 uri="jakarta.tags.core" prefix="c" %>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>Authors</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 20px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      .success {
-        color: green;
-      }
-      .error {
-        color: red;
-      }
-      input[type='text'],
-      input[type='email'] {
-        padding: 5px;
-        margin-right: 10px;
-      }
-      button {
-        padding: 6px 12px;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+    <title>Authors — Library Management</title>
 
-    <!-- jQuery CDN -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <script>
-      $(document).ready(function () {
-        // Hide success/error messages after 3 seconds
-        setTimeout(function () {
-          $('.success, .error').fadeOut('slow');
-        }, 3000);
-
-        // Simple client-side validation for author form
-        $("form[action$='/authors']").on('submit', function (e) {
-          const name = $("input[name='name']").val().trim();
-          const email = $("input[name='email']").val().trim();
-
-          if (name === '' || email === '') {
-            alert('Name and Email are required.');
-            e.preventDefault(); // prevent form submission
-          }
-        });
-      });
-    </script>
+    <!-- Modular Styles -->
+    <link
+      rel="stylesheet"
+      href="${pageContext.request.contextPath}/styles/app.css"
+    />
   </head>
   <body>
-    <h2>Authors</h2>
+    <div class="container">
+      <div class="header">
+        <h1>Authors</h1>
+        <a
+          href="${pageContext.request.contextPath}/books"
+          class="btn btn-secondary"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M2 4h12M2 8h12M2 12h12" />
+          </svg>
+          View Books
+        </a>
+      </div>
 
-    <c:if test="${not empty successMessage}">
-      <p class="success">${successMessage}</p>
-    </c:if>
-    <c:if test="${not empty errorMessage}">
-      <p class="error">${errorMessage}</p>
-    </c:if>
+      <c:if test="${not empty validationErrors}">
+        <div class="alert error">
+          <ul style="margin: 0; padding-left: 18px">
+            <c:forEach items="${validationErrors}" var="ve">
+              <li>${ve.defaultMessage}</li>
+            </c:forEach>
+          </ul>
+        </div>
+      </c:if>
+      <c:if test="${not empty successMessage}">
+        <div class="alert success">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            />
+          </svg>
+          ${successMessage}
+        </div>
+      </c:if>
+      <c:if test="${not empty errorMessage}">
+        <div class="alert error">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            />
+          </svg>
+          ${errorMessage}
+        </div>
+      </c:if>
 
-    <h3>Add Author</h3>
-    <form action="${pageContext.request.contextPath}/authors" method="post">
-      Name: <input type="text" name="name" required /> Email:
-      <input type="email" name="email" required /> Country:
-      <input type="text" name="country" />
-      <button type="submit">Save</button>
-    </form>
+      <div class="card">
+        <h2 class="card-title">Add New Author</h2>
+        <form action="${pageContext.request.contextPath}/authors" method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="name">Name *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-input"
+                placeholder="Enter author name"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-input"
+                placeholder="author@example.com"
+                pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                title="Please enter a valid email address"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="country">Country</label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                class="form-input"
+                placeholder="Enter country"
+              />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Author</button>
+        </form>
+      </div>
 
-    <h3>Author List</h3>
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Country</th>
-        <th>Actions</th>
-      </tr>
-      <c:forEach items="${authors}" var="a">
-        <tr>
-          <td>${a.id}</td>
-          <td>${a.name}</td>
-          <td>${a.email}</td>
-          <td>${a.country}</td>
-          <td>
-            <a href="${pageContext.request.contextPath}/authors/edit/${a.id}"
-              >Edit</a
-            >
-          </td>
-        </tr>
-      </c:forEach>
-    </table>
+      <div class="card">
+        <h2 class="card-title">All Authors</h2>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Country</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <c:forEach items="${authors}" var="a">
+                <tr>
+                  <td>${a.id}</td>
+                  <td><strong>${a.name}</strong></td>
+                  <td>${a.email}</td>
+                  <td>
+                    <c:if test="${not empty a.country}">
+                      <span class="badge">${a.country}</span>
+                    </c:if>
+                  </td>
+                  <td>
+                    <a
+                      href="${pageContext.request.contextPath}/authors/edit/${a.id}"
+                      class="table-link"
+                      >Edit</a
+                    >
+                  </td>
+                </tr>
+              </c:forEach>
+            </tbody>
+          </table>
+          <c:if test="${empty authors}">
+            <div class="empty-state">
+              <div class="empty-state-icon">✍️</div>
+              <p>No authors found. Add your first author above.</p>
+            </div>
+          </c:if>
+        </div>
+      </div>
+    </div>
 
-    <p>
-      <a href="${pageContext.request.contextPath}/books">Go to Books</a>
-    </p>
+    <!-- Modular Scripts -->
+    <script src="${pageContext.request.contextPath}/scripts/transitions.js"></script>
+    <script src="${pageContext.request.contextPath}/scripts/app.js"></script>
+
+    <!-- Page-specific script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Form validation for authors
+        const authorForm = document.querySelector("form[action*='/authors']");
+        const emailInput = document.querySelector('#email');
+
+        // Trim whitespace on blur and improve validation
+        if (emailInput) {
+          emailInput.addEventListener('blur', function () {
+            this.value = this.value.trim();
+          });
+
+          // Clear custom validity on input
+          emailInput.addEventListener('input', function () {
+            this.setCustomValidity('');
+          });
+
+          // Show custom validation message
+          emailInput.addEventListener('invalid', function (e) {
+            if (this.validity.typeMismatch) {
+              this.setCustomValidity(
+                'Please enter a valid email address (e.g., name@example.com)'
+              );
+            } else if (this.validity.valueMissing) {
+              this.setCustomValidity('Email is required');
+            } else if (this.validity.patternMismatch) {
+              this.setCustomValidity(
+                'Please enter a valid email address (e.g., name@example.com)'
+              );
+            }
+          });
+        }
+
+        if (authorForm) {
+          authorForm.setAttribute('data-validate', 'true');
+        }
+      });
+    </script>
   </body>
 </html>

@@ -11,4 +11,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("SELECT b.title AS title, a.name AS authorName " +
            "FROM Book b INNER JOIN b.author a")
     List<BookAuthorView> findAllBooksWithAuthors();
+
+    boolean existsByIsbn(String isbn);
+
+    boolean existsByIsbnAndIdNot(String isbn, Long id);
 }

@@ -32,9 +32,22 @@ public class BookService {
     }
 
     public Book save(Long authorId, Book book) {
+        if (book.getIsbn() == null || book.getIsbn().trim().isEmpty()) {
+            throw new IllegalArgumentException("ISBN is required.");
+        }
+        String normalizedIsbn = book.getIsbn().trim();
+        book.setIsbn(normalizedIsbn);
+
         Author author = authorRepository.findById(authorId)
                 .orElseThrow(() -> new RuntimeException("Author not found"));
         book.setAuthor(author);
+
+        boolean isbnExists = (book.getId() == null)
+                ? bookRepository.existsByIsbn(normalizedIsbn)
+                : bookRepository.existsByIsbnAndIdNot(normalizedIsbn, book.getId());
+        if (isbnExists) {
+            throw new IllegalArgumentException("ISBN must be unique");
+        }
 
         try {
             return bookRepository.save(book);
