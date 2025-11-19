@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,53 +42,46 @@
       </div>
 
       <div class="card">
-        <form
+        <form:form
           action="${pageContext.request.contextPath}/authors/update"
           method="post"
+          modelAttribute="authorForm"
         >
-          <input type="hidden" name="id" value="${authorForm.id}" />
-
+          <form:hidden path="id" />
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label" for="name">
                 Name <span class="required">*</span>
               </label>
-              <input
-                type="text"
+              <form:input
+                path="name"
                 id="name"
-                name="name"
-                value="${authorForm.name}"
-                class="form-input"
+                cssClass="form-input"
                 placeholder="Enter author name"
-                required
               />
+              <form:errors path="name" cssClass="form-error" />
             </div>
 
             <div class="form-group">
               <label class="form-label" for="email">
                 Email <span class="required">*</span>
               </label>
-              <input
-                type="email"
+              <form:input
+                path="email"
                 id="email"
-                name="email"
-                value="${authorForm.email}"
-                class="form-input"
+                type="email"
+                cssClass="form-input"
                 placeholder="author@example.com"
-                pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
-                title="Please enter a valid email address"
-                required
               />
+              <form:errors path="email" cssClass="form-error" />
             </div>
 
             <div class="form-group">
               <label class="form-label" for="country">Country</label>
-              <input
-                type="text"
+              <form:input
+                path="country"
                 id="country"
-                name="country"
-                value="${authorForm.country}"
-                class="form-input"
+                cssClass="form-input"
                 placeholder="Enter country"
               />
             </div>
@@ -101,7 +95,7 @@
               >Cancel</a
             >
           </div>
-        </form>
+        </form:form>
       </div>
     </div>
 

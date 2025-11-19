@@ -3,6 +3,7 @@ package com.sattwyk.sga2_bda.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class Author {
     private String name;
 
     @Email(message = "Email must be valid")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+             message = "Email must be valid")
     @NotBlank(message = "Email is required")
     @Column(nullable = false, unique = true)
     private String email;

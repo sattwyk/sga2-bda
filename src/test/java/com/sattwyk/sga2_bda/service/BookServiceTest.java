@@ -2,6 +2,8 @@ package com.sattwyk.sga2_bda.service;
 
 import com.sattwyk.sga2_bda.entity.Author;
 import com.sattwyk.sga2_bda.entity.Book;
+import com.sattwyk.sga2_bda.exception.ResourceNotFoundException;
+import com.sattwyk.sga2_bda.exception.ValidationException;
 import com.sattwyk.sga2_bda.repository.AuthorRepository;
 import com.sattwyk.sga2_bda.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +45,10 @@ class BookServiceTest {
         Book book = new Book();
         book.setTitle("Test Book");
         book.setIsbn("123");
-        Book result = bookService.save(1L, book);
+        Author requestAuthor = new Author();
+        requestAuthor.setId(1L);
+        book.setAuthor(requestAuthor);
+        Book result = bookService.save(book);
 
         assertSame(author, result.getAuthor(), "Author should be set on the book before saving");
         verify(authorRepository).findById(1L);
@@ -55,8 +60,11 @@ class BookServiceTest {
         when(authorRepository.findById(99L)).thenReturn(Optional.empty());
 
         Book book = new Book();
+        Author requestAuthor = new Author();
+        requestAuthor.setId(99L);
+        book.setAuthor(requestAuthor);
         book.setIsbn("123");
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> bookService.save(99L, book));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> bookService.save(book));
         assertTrue(ex.getMessage().contains("Author not found"));
         verify(bookRepository, never()).save(any(Book.class));
     }
@@ -69,11 +77,14 @@ class BookServiceTest {
         when(bookRepository.existsByIsbn("dup")).thenReturn(true);
 
         Book book = new Book();
+        Author requestAuthor = new Author();
+        requestAuthor.setId(1L);
+        book.setAuthor(requestAuthor);
         book.setTitle("Dup");
         book.setIsbn("dup");
 
-        IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> bookService.save(1L, book));
+        ValidationException ex =
+                assertThrows(ValidationException.class, () -> bookService.save(book));
         assertTrue(ex.getMessage().contains("ISBN"));
         verify(bookRepository, never()).save(any(Book.class));
     }
@@ -87,11 +98,14 @@ class BookServiceTest {
         when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Book book = new Book();
+        Author requestAuthor = new Author();
+        requestAuthor.setId(1L);
+        book.setAuthor(requestAuthor);
         book.setId(10L);
         book.setTitle("Same");
         book.setIsbn("same");
 
-        Book saved = bookService.save(1L, book);
+        Book saved = bookService.save(book);
         assertEquals("same", saved.getIsbn());
         verify(bookRepository).save(book);
     }

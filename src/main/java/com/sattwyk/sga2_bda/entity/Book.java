@@ -3,6 +3,7 @@ package com.sattwyk.sga2_bda.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 public class Book {
@@ -16,6 +17,7 @@ public class Book {
     private String title;
 
     @NotBlank(message = "ISBN is required")
+    @Pattern(regexp = "^[A-Za-z0-9\\-]+$", message = "ISBN may contain only letters, numbers, and dashes")
     @Column(nullable = false, unique = true)
     private String isbn;
 

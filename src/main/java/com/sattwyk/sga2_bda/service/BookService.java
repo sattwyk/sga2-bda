@@ -2,10 +2,11 @@ package com.sattwyk.sga2_bda.service;
 
 import com.sattwyk.sga2_bda.entity.Author;
 import com.sattwyk.sga2_bda.entity.Book;
+import com.sattwyk.sga2_bda.exception.ResourceNotFoundException;
+import com.sattwyk.sga2_bda.exception.ValidationException;
 import com.sattwyk.sga2_bda.repository.AuthorRepository;
 import com.sattwyk.sga2_bda.repository.BookAuthorView;
 import com.sattwyk.sga2_bda.repository.BookRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,32 +29,36 @@ public class BookService {
 
     public Book findById(Long id) {
         return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found."));
     }
 
-    public Book save(Long authorId, Book book) {
+    public Book save(Book book) {
+        if (book.getAuthor() == null || book.getAuthor().getId() == null) {
+            throw new ValidationException("author.id", "Author is required.");
+        }
+
+        Author author = authorRepository.findById(book.getAuthor().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Author not found."));
+        book.setAuthor(author);
+
         if (book.getIsbn() == null || book.getIsbn().trim().isEmpty()) {
-            throw new IllegalArgumentException("ISBN is required.");
+            throw new ValidationException("isbn", "ISBN is required.");
         }
         String normalizedIsbn = book.getIsbn().trim();
         book.setIsbn(normalizedIsbn);
-
-        Author author = authorRepository.findById(authorId)
-                .orElseThrow(() -> new RuntimeException("Author not found"));
-        book.setAuthor(author);
 
         boolean isbnExists = (book.getId() == null)
                 ? bookRepository.existsByIsbn(normalizedIsbn)
                 : bookRepository.existsByIsbnAndIdNot(normalizedIsbn, book.getId());
         if (isbnExists) {
-            throw new IllegalArgumentException("ISBN must be unique");
+            throw new ValidationException("isbn", "ISBN must be unique.");
         }
 
-        try {
-            return bookRepository.save(book);
-        } catch (DataIntegrityViolationException e) {
-            throw e;
+        if (book.getTitle() != null) {
+            book.setTitle(book.getTitle().trim());
         }
+
+        return bookRepository.save(book);
     }
 
     public List<BookAuthorView> findAllBooksWithAuthors() {

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,65 +33,56 @@
         </div>
 
         <div class="card">
-            <form action="${pageContext.request.contextPath}/books/update" method="post">
-                <input type="hidden" name="id" value="${bookForm.id}" />
-                
+            <form:form action="${pageContext.request.contextPath}/books/update" method="post" modelAttribute="bookForm">
+                <form:hidden path="id"/>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="title">
                             Title <span class="required">*</span>
                         </label>
-                        <input 
-                            type="text" 
+                        <form:input 
+                            path="title"
                             id="title" 
-                            name="title" 
-                            value="${bookForm.title}" 
-                            class="form-input" 
+                            cssClass="form-input" 
                             placeholder="Enter book title"
-                            required 
                         />
+                        <form:errors path="title" cssClass="form-error"/>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="isbn">ISBN <span class="required">*</span></label>
-                        <input 
-                            type="text" 
+                        <form:input 
+                            path="isbn"
                             id="isbn" 
-                            name="isbn" 
-                            value="${bookForm.isbn}" 
-                            class="form-input" 
+                            cssClass="form-input" 
                             placeholder="978-0-123456-78-9"
-                            required
-                            pattern="^[A-Za-z0-9\\-]+$"
                         />
+                        <form:errors path="isbn" cssClass="form-error"/>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="price">Price</label>
-                        <input 
-                            type="number" 
+                        <form:input 
+                            path="price"
                             id="price" 
+                            type="number"
                             step="0.01" 
-                            name="price" 
-                            value="${bookForm.price}" 
-                            class="form-input" 
+                            cssClass="form-input" 
                             placeholder="0.00"
                             min="0"
                         />
+                        <form:errors path="price" cssClass="form-error"/>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="authorId">
                             Author <span class="required">*</span>
                         </label>
-                        <select id="authorId" name="authorId" class="form-select" required>
-                            <c:forEach items="${authors}" var="a">
-                                <option value="${a.id}"
-                                    <c:if test="${a.id == bookForm.author.id}">selected</c:if>>
-                                    ${a.name}
-                                </option>
-                            </c:forEach>
-                        </select>
+                        <form:select path="author.id" id="authorId" cssClass="form-select">
+                            <form:option value="" label="Select an author"/>
+                            <form:options items="${authors}" itemValue="id" itemLabel="name"/>
+                        </form:select>
+                        <form:errors path="author.id" cssClass="form-error"/>
                     </div>
                 </div>
 
@@ -98,7 +90,7 @@
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                     <a href="${pageContext.request.contextPath}/books" class="btn btn-secondary">Cancel</a>
                 </div>
-            </form>
+            </form:form>
         </div>
     </div>
 

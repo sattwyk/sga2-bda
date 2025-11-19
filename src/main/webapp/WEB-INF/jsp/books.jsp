@@ -1,5 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" %> <%@ taglib
-uri="jakarta.tags.core" prefix="c" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -75,60 +76,61 @@ uri="jakarta.tags.core" prefix="c" %>
 
       <div class="card">
         <h2 class="card-title">Add New Book</h2>
-        <form action="${pageContext.request.contextPath}/books" method="post">
+        <form:form
+          action="${pageContext.request.contextPath}/books"
+          method="post"
+          modelAttribute="bookForm"
+        >
+          <form:hidden path="id" />
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label" for="title">Title *</label>
-              <input
-                type="text"
+              <form:input
+                path="title"
                 id="title"
-                name="title"
-                class="form-input"
+                cssClass="form-input"
                 placeholder="Enter book title"
-                required
               />
+              <form:errors path="title" cssClass="form-error" />
             </div>
             <div class="form-group">
               <label class="form-label" for="isbn">ISBN *</label>
-              <input
-                type="text"
+              <form:input
+                path="isbn"
                 id="isbn"
-                name="isbn"
-                class="form-input"
+                cssClass="form-input"
                 placeholder="978-0-123456-78-9"
-                required
-                pattern="^[A-Za-z0-9\\-]+$"
               />
+              <form:errors path="isbn" cssClass="form-error" />
             </div>
             <div class="form-group">
               <label class="form-label" for="price">Price</label>
-              <input
-                type="number"
+              <form:input
+                path="price"
                 id="price"
+                type="number"
                 step="0.01"
-                name="price"
-                class="form-input"
+                cssClass="form-input"
                 placeholder="0.00"
                 min="0"
               />
+              <form:errors path="price" cssClass="form-error" />
             </div>
             <div class="form-group">
               <label class="form-label" for="authorId">Author *</label>
-              <select
+              <form:select
+                path="author.id"
                 id="authorId"
-                name="authorId"
-                class="form-select"
-                required
+                cssClass="form-select"
               >
-                <option value="">Select an author</option>
-                <c:forEach items="${authors}" var="a">
-                  <option value="${a.id}">${a.name}</option>
-                </c:forEach>
-              </select>
+                <form:option value="" label="Select an author" />
+                <form:options items="${authors}" itemValue="id" itemLabel="name" />
+              </form:select>
+              <form:errors path="author.id" cssClass="form-error" />
             </div>
           </div>
           <button type="submit" class="btn btn-primary">Add Book</button>
-        </form>
+        </form:form>
       </div>
 
       <div class="card">

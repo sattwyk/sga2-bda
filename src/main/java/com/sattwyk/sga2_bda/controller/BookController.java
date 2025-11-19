@@ -1,11 +1,13 @@
 package com.sattwyk.sga2_bda.controller;
 
+import com.sattwyk.sga2_bda.entity.Author;
 import com.sattwyk.sga2_bda.entity.Book;
+import com.sattwyk.sga2_bda.exception.ResourceNotFoundException;
+import com.sattwyk.sga2_bda.exception.ValidationException;
 import com.sattwyk.sga2_bda.repository.BookAuthorView;
 import com.sattwyk.sga2_bda.service.AuthorService;
 import com.sattwyk.sga2_bda.service.BookService;
 import jakarta.validation.Valid;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -29,61 +31,70 @@ public class BookController {
 
     @GetMapping
     public String listBooks(Model model) {
-        model.addAttribute("books", bookService.findAll());
-        model.addAttribute("bookForm", new Book());
-        model.addAttribute("authors", authorService.findAll());
+        prepareBookFormModel(model);
         return "books";
     }
 
     @PostMapping
     public String createBook(@Valid @ModelAttribute("bookForm") Book book,
                              BindingResult bindingResult,
-                             @RequestParam("authorId") Long authorId,
-                             RedirectAttributes redirectAttributes,
-                             Model model) {
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("books", bookService.findAll());
-            model.addAttribute("authors", authorService.findAll());
-            model.addAttribute("validationErrors", bindingResult.getAllErrors());
+            prepareBookFormModel(model);
             return "books";
         }
         try {
-            bookService.save(authorId, book);
+            bookService.save(book);
             redirectAttributes.addFlashAttribute("successMessage", "Book saved successfully.");
-        } catch (IllegalArgumentException e) {
+            return "redirect:/books";
+        } catch (ValidationException e) {
+            rejectField(bindingResult, e);
+            prepareBookFormModel(model);
+            return "books";
+        } catch (ResourceNotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "ISBN must be unique.");
+            return "redirect:/books";
         }
-        return "redirect:/books";
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
-        Book book = bookService.findById(id);
-        model.addAttribute("bookForm", book);
-        model.addAttribute("authors", authorService.findAll());
-        return "edit-book";
+    public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Book book = bookService.findById(id);
+            if (book.getAuthor() == null) {
+                book.setAuthor(new Author());
+            }
+            model.addAttribute("bookForm", book);
+            model.addAttribute("authors", authorService.findAll());
+            return "edit-book";
+        } catch (ResourceNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/books";
+        }
     }
 
     @PostMapping("/update")
     public String updateBook(@Valid @ModelAttribute("bookForm") Book book,
                              BindingResult bindingResult,
-                             @RequestParam("authorId") Long authorId,
+                             Model model,
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please correct the fields.");
-            return "redirect:/books/edit/" + book.getId();
+            model.addAttribute("authors", authorService.findAll());
+            return "edit-book";
         }
         try {
-            bookService.save(authorId, book);
+            bookService.save(book);
             redirectAttributes.addFlashAttribute("successMessage", "Book updated successfully.");
-        } catch (IllegalArgumentException e) {
+            return "redirect:/books";
+        } catch (ValidationException e) {
+            rejectField(bindingResult, e);
+            model.addAttribute("authors", authorService.findAll());
+            return "edit-book";
+        } catch (ResourceNotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "ISBN must be unique.");
+            return "redirect:/books";
         }
-        return "redirect:/books";
     }
 
     @GetMapping("/with-authors")
@@ -91,5 +102,26 @@ public class BookController {
         List<BookAuthorView> list = bookService.findAllBooksWithAuthors();
         model.addAttribute("booksWithAuthors", list);
         return "book-with-authors";
+    }
+
+    private void prepareBookFormModel(Model model) {
+        Book form = (Book) model.getAttribute("bookForm");
+        if (form == null) {
+            form = new Book();
+        }
+        if (form.getAuthor() == null) {
+            form.setAuthor(new Author());
+        }
+        model.addAttribute("bookForm", form);
+        model.addAttribute("books", bookService.findAll());
+        model.addAttribute("authors", authorService.findAll());
+    }
+
+    private void rejectField(BindingResult bindingResult, ValidationException e) {
+        if (e.getFieldName() != null) {
+            bindingResult.rejectValue(e.getFieldName(), "invalid", e.getMessage());
+        } else {
+            bindingResult.reject("bookForm", e.getMessage());
+        }
     }
 }

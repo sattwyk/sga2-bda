@@ -394,6 +394,12 @@ body {
   opacity: 0.6;
 }
 
+.form-error {
+  color: var(--destructive);
+  font-size: 0.85rem;
+  margin-top: -4px;
+}
+
 .required {
   color: var(--destructive);
 }

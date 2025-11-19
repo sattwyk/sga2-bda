@@ -1,9 +1,10 @@
 package com.sattwyk.sga2_bda.controller;
 
 import com.sattwyk.sga2_bda.entity.Author;
+import com.sattwyk.sga2_bda.exception.ResourceNotFoundException;
+import com.sattwyk.sga2_bda.exception.ValidationException;
 import com.sattwyk.sga2_bda.service.AuthorService;
 import jakarta.validation.Valid;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,51 +23,65 @@ public class AuthorController {
 
     @GetMapping
     public String listAuthors(Model model) {
+        if (!model.containsAttribute("authorForm")) {
+            model.addAttribute("authorForm", new Author());
+        }
         model.addAttribute("authors", authorService.findAll());
-        model.addAttribute("authorForm", new Author());
         return "authors";
     }
 
     @PostMapping
     public String createAuthor(@Valid @ModelAttribute("authorForm") Author author,
                                BindingResult bindingResult,
-                               RedirectAttributes redirectAttributes,
-                               Model model) {
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("authors", authorService.findAll());
-            model.addAttribute("validationErrors", bindingResult.getAllErrors());
             return "authors";
         }
         try {
             authorService.save(author);
             redirectAttributes.addFlashAttribute("successMessage", "Author saved successfully.");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Email must be unique.");
+            return "redirect:/authors";
+        } catch (ValidationException e) {
+            bindingResult.rejectValue(e.getFieldName(), "invalid", e.getMessage());
+            model.addAttribute("authors", authorService.findAll());
+            return "authors";
         }
-        return "redirect:/authors";
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
-        Author author = authorService.findById(id);
-        model.addAttribute("authorForm", author);
-        return "edit-author";
+    public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Author author = authorService.findById(id);
+            model.addAttribute("authorForm", author);
+            return "edit-author";
+        } catch (ResourceNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/authors";
+        }
     }
 
     @PostMapping("/update")
     public String updateAuthor(@Valid @ModelAttribute("authorForm") Author author,
                                BindingResult bindingResult,
+                               Model model,
                                RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please correct the fields.");
-            return "redirect:/authors/edit/" + author.getId();
+            model.addAttribute("authorForm", author);
+            return "edit-author";
         }
         try {
             authorService.save(author);
             redirectAttributes.addFlashAttribute("successMessage", "Author updated successfully.");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Email must be unique.");
+            return "redirect:/authors";
+        } catch (ValidationException e) {
+            bindingResult.rejectValue(e.getFieldName(), "invalid", e.getMessage());
+            model.addAttribute("authorForm", author);
+            return "edit-author";
+        } catch (ResourceNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/authors";
         }
-        return "redirect:/authors";
     }
 }
